@@ -1,2 +1,6 @@
 Hello World!!
+<<<<<<< HEAD
 This is master branch.
+=======
+This is new_branch_rename.
+>>>>>>> new_branch_rename
