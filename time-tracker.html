@@ -1,0 +1,2871 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Work Time Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            color: #2d3748;
+            margin-bottom: 25px;
+            font-size: 24px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        /* Filter controls */
+        .filter-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .search-box, .date-filter {
+            padding: 10px;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .search-box {
+            min-width: 200px;
+            flex: 1;
+        }
+        
+        .date-filter {
+            min-width: 150px;
+        }
+        
+        /* Actions buttons */
+        .actions {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .data-table th {
+            background: #f7fafc;
+            color: #2d3748;
+            font-weight: 600;
+            padding: 15px;
+            text-align: left;
+            border-bottom: 2px solid #e2e8f0;
+            cursor: pointer;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            user-select: none;
+            white-space: nowrap;
+        }
+        
+        .data-table th:hover {
+            background: #e2e8f0;
+        }
+        
+        .sort-arrow {
+            margin-left: 5px;
+            font-size: 12px;
+            color: #a0aec0;
+        }
+        
+        .data-table th.no-sort {
+            cursor: default;
+        }
+        
+        .data-table th.no-sort:hover {
+            background: #f7fafc;
+        }
+        
+        .data-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+        
+        .data-table tr:hover {
+            background: #f7fafc;
+        }
+        
+        /* Status classes for todos */
+        .todo-row-completed {
+            background: #f0fff4 !important;
+            color: #2d5016;
+        }
+        
+        .todo-row-overdue {
+            background: #fff5f5 !important;
+            color: #742a2a;
+        }
+        
+        .todo-row-pending {
+            background: #fffbf0 !important;
+            color: #744210;
+        }
+        
+        .priority-high {
+            color: #f56565;
+            font-weight: bold;
+        }
+        
+        .priority-medium {
+            color: #ed8936;
+            font-weight: bold;
+        }
+        
+        .priority-low {
+            color: #48bb78;
+            font-weight: bold;
+        }
+        
+        .status-completed {
+            background: #48bb78;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        
+        .status-in-progress {
+            background: #ed8936;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        
+        .status-not-started {
+            background: #a0aec0;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+            flex-direction: column;
+            min-width: 80px;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-edit, .btn-delete, .btn-save, .btn-cancel, .btn-hide, .btn-unhide {
+            padding: 4px 8px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            width: 100%;
+            margin: 1px 0;
+            white-space: nowrap;
+        }
+        
+        .btn-edit {
+            background: #4299e1;
+            color: white;
+        }
+        
+        .btn-delete {
+            background: #f56565;
+            color: white;
+        }
+        
+        .btn-save {
+            background: #48bb78;
+            color: white;
+        }
+        
+        .btn-cancel {
+            background: #a0aec0;
+            color: white;
+        }
+        
+        .btn-hide {
+            background: #ed8936;
+            color: white;
+        }
+        
+        .btn-unhide {
+            background: #38b2ac;
+            color: white;
+        }
+        
+        .edit-input {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid #cbd5e0;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .refresh-btn, .add-btn, .apply-filters-btn {
+            background: #48bb78;
+            width: auto;
+            margin: 0;
+        }
+        
+        .add-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .apply-filters-btn {
+            background: #ed8936;
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #a0aec0;
+            font-style: italic;
+        }
+        
+        /* Actions column width */
+        .data-table th:last-child,
+        .data-table td:last-child {
+            width: 90px;
+            min-width: 90px;
+        }
+        
+        @media (max-width: 768px) {
+            .filter-controls, .actions {
+                flex-direction: column;
+            }
+            
+            .search-box, .date-filter {
+                width: 100%;
+            }
+            
+            .data-table {
+                font-size: 12px;
+            }
+            
+            .data-table th,
+            .data-table td {
+                padding: 8px;
+            }
+            
+            .action-buttons {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+            
+            .btn-edit, .btn-delete, .btn-save, .btn-cancel, .btn-hide, .btn-unhide {
+                width: auto;
+                padding: 3px 6px;
+                font-size: 10px;
+            }
+        }
+
+		/* Hydration & Fitness Section Styles */
+		.motivation-slider {
+			height: 80px;
+			overflow: hidden;
+			position: relative;
+			background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+			border-radius: 12px;
+			margin-bottom: 20px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+		
+		.quote-container {
+			display: flex;
+			flex-direction: column;
+			animation: slideQuotes 8s infinite;
+			text-align: center;
+			color: white;
+			font-weight: bold;
+			padding: 10px;
+		}
+		
+		.quote {
+			height: 80px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 18px;
+			text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+		}
+		
+		@keyframes slideQuotes {
+			0%, 20% { transform: translateY(0); }
+			25%, 45% { transform: translateY(-80px); }
+			50%, 70% { transform: translateY(-160px); }
+			75%, 95% { transform: translateY(-240px); }
+			100% { transform: translateY(-320px); }
+		}
+		
+		.progress-container {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 30px;
+			margin: 30px 0;
+		}
+		
+		.water-tracker, .fitness-tracker {
+			background: white;
+			padding: 25px;
+			border-radius: 12px;
+			box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+			text-align: center;
+		}
+		
+		.water-animation {
+			width: 120px;
+			height: 150px;
+			margin: 0 auto 20px;
+			position: relative;
+			border: 3px solid #4ecdc4;
+			border-radius: 10px;
+			background: linear-gradient(to bottom, transparent 70%, #4ecdc4 70%);
+			transition: background 0.5s ease;
+		}
+		
+		.water-level {
+			position: absolute;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			background: linear-gradient(to top, #4ecdc4, #45b7aa);
+			border-radius: 0 0 7px 7px;
+			transition: height 0.8s ease;
+			height: 10%;
+		}
+		
+		.strength-animation {
+			width: 120px;
+			height: 30px;
+			margin: 0 auto 20px;
+			position: relative;
+			background: #e2e8f0;
+			border-radius: 15px;
+			overflow: hidden;
+		}
+		
+		.strength-level {
+			height: 100%;
+			background: linear-gradient(to right, #ff6b6b, #ff5252);
+			border-radius: 15px;
+			transition: width 0.8s ease;
+			width: 10%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			color: white;
+			font-weight: bold;
+			font-size: 12px;
+		}
+		
+		.input-group {
+			display: flex;
+			gap: 10px;
+			margin: 15px 0;
+			align-items: center;
+		}
+		
+		.input-group input {
+			flex: 1;
+			padding: 8px;
+			border: 1px solid #cbd5e0;
+			border-radius: 6px;
+		}
+		
+		.input-group button {
+			padding: 8px 16px;
+			background: #48bb78;
+			color: white;
+			border: none;
+			border-radius: 6px;
+			cursor: pointer;
+			font-size: 12px;
+		}
+		
+		.stats-display {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 15px;
+			margin-top: 20px;
+		}
+		
+		.stat-card {
+			background: #f7fafc;
+			padding: 15px;
+			border-radius: 8px;
+			text-align: center;
+		}
+		
+		.stat-number {
+			font-size: 24px;
+			font-weight: bold;
+			color: #2d3748;
+		}
+		
+		.stat-label {
+			font-size: 12px;
+			color: #718096;
+			margin-top: 5px;
+		}
+		
+		.notification-controls {
+			display: flex;
+			gap: 15px;
+			justify-content: center;
+			margin: 20px 0;
+		}
+		
+		.dnd-toggle {
+			background: #ed8936;
+			color: white;
+			padding: 10px 20px;
+			border: none;
+			border-radius: 8px;
+			cursor: pointer;
+			font-weight: bold;
+		}
+		
+		.dnd-toggle.active {
+			background: #f56565;
+		}
+		
+		.notification-popup {
+			position: fixed;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+			background: white;
+			padding: 30px;
+			border-radius: 15px;
+			box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+			z-index: 1000;
+			text-align: center;
+			min-width: 300px;
+			display: none;
+		}
+		
+		.notification-overlay {
+			position: fixed;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			background: rgba(0,0,0,0.5);
+			z-index: 999;
+			display: none;
+		}
+		
+		.notification-icon {
+			font-size: 48px;
+			margin-bottom: 15px;
+		}
+		
+		.notification-buttons {
+			display: flex;
+			gap: 10px;
+			justify-content: center;
+			margin-top: 20px;
+		}
+		
+		.streak-display {
+			background: linear-gradient(135deg, #667eea, #764ba2);
+			color: white;
+			padding: 15px;
+			border-radius: 10px;
+			text-align: center;
+			margin: 15px 0;
+		}
+		
+		.streak-number {
+			font-size: 28px;
+			font-weight: bold;
+		}
+
+		/* Serial number column */
+		.serial-number {
+			width: 40px;
+			min-width: 40px;
+			text-align: center;
+			font-weight: bold;
+			color: #4a5568;
+		}
+		
+		/* Arrow buttons for position management */
+		.arrow-buttons {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 2px;
+			margin-bottom: 5px;
+			min-width: 80px;
+		}
+		
+		.btn-move-top, .btn-move-up, .btn-move-down, .btn-move-bottom {
+			padding: 2px 4px;
+			border: none;
+			border-radius: 3px;
+			cursor: pointer;
+			font-size: 10px;
+			height: 18px;
+			width: 100%;
+			color: white;
+			font-weight: bold;
+		}
+		
+		.btn-move-top {
+			background: #805ad5;
+		}
+		
+		.btn-move-up {
+			background: #4299e1;
+		}
+		
+		.btn-move-down {
+			background: #48bb78;
+		}
+		
+		.btn-move-bottom {
+			background: #ed8936;
+		}
+		
+		.btn-move-top:hover, .btn-move-up:hover, 
+		.btn-move-down:hover, .btn-move-bottom:hover {
+			opacity: 0.8;
+			transform: none;
+		}
+		
+		/* Update actions column to accommodate more buttons */
+		.data-table th:last-child,
+		.data-table td:last-child {
+			width: 100px;
+			min-width: 100px;
+		}
+		
+		@media (max-width: 768px) {
+			.arrow-buttons {
+				grid-template-columns: 1fr 1fr;
+				gap: 1px;
+			}
+			
+			.btn-move-top, .btn-move-up, .btn-move-down, .btn-move-bottom {
+				font-size: 9px;
+				height: 16px;
+				padding: 1px 2px;
+			}
+		}
+        
+
+		/* Styles for the Pop-up Modal */
+		.modal-overlay {
+			display: none; /* Hidden by default */
+			position: fixed;
+			z-index: 100;
+			left: 0;
+			top: 0;
+			width: 100%;
+			height: 100%;
+			overflow: auto;
+			background-color: rgba(0,0,0,0.5);
+		}
+		
+		.modal-content {
+			background-color: #fefefe;
+			margin: 5% auto; /* Reduced top margin */
+			padding: 30px; /* A little more padding */
+			border: 1px solid #888;
+			width: 90%; /* Allow it to use more of the screen */
+			max-width: 800px; /* Increased max-width for large screens */
+			border-radius: 12px;
+			position: relative;
+		}
+		
+		.modal-close {
+			color: #aaa;
+			position: absolute;
+			top: 10px;
+			right: 20px;
+			font-size: 28px;
+			font-weight: bold;
+			cursor: pointer;
+		}
+		
+		.modal-close:hover {
+			color: black;
+		}
+		
+		.edit-icon {
+			margin-left: 8px;
+			cursor: pointer;
+			opacity: 0.6;
+		}
+		.edit-icon:hover {
+			opacity: 1;
+		}
+
+		.edit-icon {
+			margin-left: 8px;
+			cursor: pointer;
+			opacity: 0.6;
+		}
+		.edit-icon:hover {
+			opacity: 1;
+		}		
+
+		/* --- FINAL STYLES FOR SUB-TASK FEATURE --- */
+
+		/* Main Sub-task Item Layout */
+		.subtask-item {
+			display: flex;
+			align-items: center;
+			padding: 8px 5px;
+			border-bottom: 1px solid #eee;
+		}
+		.subtask-main {
+			display: flex;
+			align-items: center;
+			flex: 1;
+		}
+		.subtask-item input[type="checkbox"] {
+			margin-right: 10px;
+		}
+		.subtask-item-text {
+			flex: 1;
+		}
+
+		/* Automatic Numbering */
+		#subtask-list {
+			counter-reset: subtask-counter;
+		}
+		.subtask-item::before {
+			counter-increment: subtask-counter;
+			content: counter(subtask-counter) ". ";
+			font-weight: bold;
+			margin-right: 8px;
+		}
+
+		/* Icons */
+		.edit-icon, .log-work-icon {
+			margin-left: 5px;
+			cursor: pointer;
+			opacity: 0.6;
+		}
+		.edit-icon:hover, .log-work-icon:hover {
+			opacity: 1;
+		}
+
+		/* Sub-task EDIT MODE Layout */
+		.subtask-item.editing {
+			gap: 5px;
+		}
+		.subtask-item.editing input[type="text"] {
+			flex: 1;
+			min-width: 0;
+		}
+		.subtask-item.editing .btn-save,
+		.subtask-item.editing .btn-cancel {
+			width: auto;
+			flex-shrink: 0;
+		}
+
+		/* LOG WORK FORM Layout */
+		.log-work-form {
+			display: none;
+			padding: 10px;
+			margin-left: 25px;
+			margin-top: 5px;
+			background-color: #f7fafc;
+			border-radius: 6px;
+		}
+		.log-form-row {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			margin-bottom: 5px;
+		}
+		.log-work-form .subtask-start-time,
+		.log-work-form .subtask-end-time {
+			flex: 1;
+			min-width: 0;
+		}
+		.log-work-form .duration-display {
+			flex: 0 0 70px;
+			text-align: center;
+			font-weight: bold;
+		}
+		/* --- END FINAL STYLES --- */
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Work Log Section -->
+        <div class="section">
+            <h1>Daily Work Log</h1>
+            
+            <div class="filter-controls">
+                <input type="text" class="search-box" id="workSearch" placeholder="Search work logs..." onkeyup="filterWorkTable()">
+                <select class="date-filter" id="workDateFilter" onchange="filterWorkTable()">
+                    <option value="all">All Time</option>
+                    <option value="today">Today</option>
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                </select>
+            </div>
+            
+            <div class="actions">
+                <!-- <button class="refresh-btn" onclick="loadWorkLogs()">Refresh Logs</button> -->
+				<button class="refresh-btn" id="refreshWorkBtn" onclick="loadWorkLogs()">Refresh Logs</button>
+                <button class="apply-filters-btn" onclick="applyWorkFilters()">Apply Filters</button>
+                <button class="add-btn" onclick="addNewWorkRow()">
+                    <span>+</span> Add Entry
+                </button>
+            </div>
+            
+            <div class="table-container" id="workTableContainer">
+                <table class="data-table">
+					<thead>
+						<tr>
+							<th onclick="sortWorkTable(0)">Start Time <span class="sort-arrow">↕</span></th>
+							<th onclick="sortWorkTable(1)">End Time <span class="sort-arrow">↕</span></th>
+							<th onclick="sortWorkTable(2)">Duration <span class="sort-arrow">↕</span></th>
+							<th onclick="sortWorkTable(2)">Activity <span class="sort-arrow">↕</span></th>
+							<th onclick="sortWorkTable(3)">Contact <span class="sort-arrow">↕</span></th>
+							<th onclick="sortWorkTable(4)">Notes <span class="sort-arrow">↕</span></th>
+							<th class="no-sort">Actions</th>
+						</tr>
+					</thead>
+                    <tbody id="workTableBody">
+                        <!-- Data will be loaded here -->
+                    </tbody>
+                </table>
+                <div id="workNoResults" class="no-results" style="display: none;">
+                    No work logs match your search criteria.
+                </div>
+            </div>
+        </div>
+
+        <!-- Todo Management Table Section -->
+        <div class="section">
+            <h1>My Todos</h1>
+            
+            <div class="filter-controls">
+                <input type="text" class="search-box" id="todoSearch" placeholder="Search todos..." onkeyup="filterTodoTable()">
+                <select class="date-filter" id="todoDateFilter" onchange="filterTodoTable()">
+                    <option value="all">All Time</option>
+                    <option value="today">Due Today</option>
+                    <option value="week">Due This Week</option>
+                    <option value="month">Due This Month</option>
+                    <option value="overdue">Overdue</option>
+                </select>
+            </div>
+            
+            <div class="actions">
+                <!-- <button class="refresh-btn" onclick="loadTodos()">Refresh Todos</button> -->
+				<button class="refresh-btn" id="refreshTodoBtn" onclick="loadTodos()">Refresh Todos</button>
+                <button class="apply-filters-btn" onclick="applyTodoFilters()">Apply Filters</button>
+                <button class="add-btn" onclick="addNewTodoRow()">
+                    <span>+</span> Add Task
+                </button>
+            </div>
+            
+            <div class="table-container" id="todoTableContainer">
+                <table class="data-table">
+					<thead>
+						<tr>
+							<th class="serial-number no-sort">No.</th>
+							<th onclick="sortTodoTable(1)">Task <span class="sort-arrow">↕</span></th>
+							<th onclick="sortTodoTable(2)">Priority <span class="sort-arrow">↕</span></th>
+							<th onclick="sortTodoTable(3)">Due Date <span class="sort-arrow">↕</span></th>
+							<th onclick="sortTodoTable(4)">Status <span class="sort-arrow">↕</span></th>
+							<th onclick="sortTodoTable(5)">Created <span class="sort-arrow">↕</span></th>
+							<th class="no-sort">Actions</th>
+						</tr>
+					</thead>
+                    <tbody id="todoTableBody">
+                        <!-- Data will be loaded here -->
+                    </tbody>
+                </table>
+                <div id="todoNoResults" class="no-results" style="display: none;">
+                    No todos match your search criteria.
+                </div>
+            </div>
+        </div>
+
+		<div class="section">
+			<h1>💧 Hydration & Fitness Tracker 💪</h1>		
+		
+			<!-- Notification Controls -->
+			<div class="notification-controls">
+				<button class="dnd-toggle" id="dndToggle" onclick="toggleDND()">
+					🔕 Do Not Disturb: OFF
+				</button>
+				<button onclick="testNotification()" style="background: #4299e1;">
+					🔔 Test Notification
+				</button>
+			</div>
+		
+			<!-- Current Streak -->
+			<div class="streak-display">
+				<div class="streak-number" id="currentStreak">0</div>
+				<div>Day Streak! 🔥</div>
+			</div>
+		
+			<!-- Progress Animations -->
+			<div class="progress-container">
+				<!-- Water Tracker -->
+				<div class="water-tracker">
+					<h3 style="color: #4ecdc4; margin-bottom: 20px;">💧 Hydration</h3>
+					<div class="water-animation">
+						<div class="water-level" id="waterLevel"></div>
+					</div>
+					<div class="input-group">
+						<input type="number" id="waterInput" placeholder="ML" min="1" max="1000">
+						<button onclick="addWater()">Add Water</button>
+					</div>
+					<div style="font-weight: bold; color: #4ecdc4; font-size: 18px;">
+						<span id="waterCount">0</span> / 2000 ML
+					</div>
+				</div>
+		
+				<!-- Fitness Tracker -->
+				<div class="fitness-tracker">
+					<h3 style="color: #ff6b6b; margin-bottom: 20px;">💪 Exercise</h3>
+					<div class="strength-animation">
+						<div class="strength-level" id="strengthLevel">💪</div>
+					</div>
+					<div class="input-group">
+						<input type="number" id="exerciseInput" placeholder="Minutes" min="1" max="120">
+						<button onclick="addExercise()">Add Exercise</button>
+					</div>
+					<div style="font-weight: bold; color: #ff6b6b; font-size: 18px;">
+						<span id="exerciseCount">0</span> / 60 Minutes
+					</div>
+				</div>
+			</div>
+		
+			<!-- Daily Stats -->
+			<div class="stats-display">
+				<div class="stat-card">
+					<div class="stat-number" id="todayWater">0</div>
+					<div class="stat-label">Water Sessions Today</div>
+				</div>
+				<div class="stat-card">
+					<div class="stat-number" id="todayExercise">0</div>
+					<div class="stat-label">Exercise Sessions Today</div>
+				</div>
+				<div class="stat-card">
+					<div class="stat-number" id="weeklyAverage">0</div>
+					<div class="stat-label">Weekly Average</div>
+				</div>
+				<div class="stat-card">
+					<div class="stat-number" id="totalPoints">0</div>
+					<div class="stat-label">Total Points</div>
+				</div>
+			</div>
+		</div>
+		
+		<!-- Notification Popup -->
+		<div class="notification-overlay" id="notificationOverlay"></div>
+		<div class="notification-popup" id="notificationPopup">
+			<div class="notification-icon" id="notificationIcon">💧</div>
+			<h2 id="notificationTitle">Time to Hydrate!</h2>
+			<p id="notificationMessage">It's been 2 hours! Your body needs water to stay energized.</p>
+			<div class="notification-buttons">
+				<button onclick="markCompleted('water')" style="background: #48bb78;">
+					✅ Done!
+				</button>
+				<button onclick="snoozeNotification()" style="background: #ed8936;">
+					⏰ Snooze 10min
+				</button>
+				<button onclick="dismissNotification()" style="background: #a0aec0;">
+					❌ Dismiss
+				</button>
+			</div>
+		</div>
+
+		<div id="task-details-modal" class="modal-overlay">
+			<div class="modal-content">
+				<span class="modal-close" onclick="closeTaskDetails()">&times;</span>
+				<h2>Task Details</h2>
+				
+				<div id="modal-body-content">
+					<h4>Details</h4>
+					<textarea id="task-details-textarea" rows="2" placeholder="Add details..."></textarea>
+					<button id="save-details-btn" class="btn-save" style="margin-top: 10px;">Save</button>
+				
+					<hr style="margin: 20px 0;">
+				
+					<h4>Sub-tasks</h4>
+				
+					<ul id="subtask-list" style="list-style: none; padding: 0; margin-top: 10px;">
+						</ul>
+				
+					<div class="add-subtask-form">
+						<input type="text" id="new-subtask-input" class="edit-input" placeholder="Type a new sub-task and press Enter">
+						<button onclick="addNewSubtask()" class="btn-save">Add</button>
+					</div>
+				</div>
+			</div>
+		</div>		
+
+    </div>
+
+    <script>
+        let workSortDirection = {};
+        let todoSortDirection = {};
+        let workData = [];
+        let todoData = [];
+		let isTodosLoading = false;
+		let isWorkLogLoading = false;
+
+        // Utility functions
+        function isWithinDateRange(date, range) {
+            const now = new Date();
+            const itemDate = new Date(date);
+            
+            switch(range) {
+                case 'today':
+                    return itemDate.toDateString() === now.toDateString();
+                case 'week':
+                    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                    return itemDate >= weekAgo;
+                case 'month':
+                    const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                    return itemDate >= monthAgo;
+                case 'overdue':
+                    return itemDate < now;
+                default:
+                    return true;
+            }
+        }
+
+        function matchesSearch(text, searchTerm) {
+            return text.toLowerCase().includes(searchTerm.toLowerCase());
+        }
+
+        // Work log functions
+    	function createWorkRow(work, rowId) {
+			const row = document.createElement('tr');
+			row.dataset.id = rowId;
+			
+			const startTime = work.startTime ? new Date(work.startTime).toLocaleString() : work['Start Time'] || '';
+			const endTime = work.endTime ? new Date(work.endTime).toLocaleString() : work['End Time'] || '';
+			const duration = work.duration || work.Duration || ''; 
+			const activity = work.activity || work.Activity || '';
+			const contact = work.contact || work.Contact || '-';
+			const notes = work.notes || work.Notes || '-';
+			const isHidden = work.hidden === 'true' || work.hidden === true;
+			
+			row.innerHTML = `
+				<td>${startTime}</td>
+				<td>${endTime}</td>
+				<td>${duration}</td> 
+				<td>${activity}</td>
+				<td>${contact}</td>
+				<td>${notes}</td>
+				<td>
+					<div class="action-buttons">
+						<button class="btn-edit" onclick="editWork(this)">Edit</button>
+						<button class="btn-delete" onclick="deleteWork(this)">Delete</button>
+						<button class="btn-hide" onclick="toggleWorkHide(this)">Hide</button>
+					</div>
+				</td>
+			`;
+			
+			return row;
+		}
+
+        function filterWorkTable() {
+            const searchTerm = document.getElementById('workSearch').value;
+            const dateFilter = document.getElementById('workDateFilter').value;
+            const rows = document.querySelectorAll('#workTableBody tr');
+            let visibleCount = 0;
+            
+            rows.forEach(row => {
+                if (row.dataset.id === 'new') return;
+                
+                const cells = row.querySelectorAll('td');
+                const rowText = Array.from(cells).slice(0, 5).map(cell => cell.textContent).join(' ');
+                const startTime = cells[0].textContent;
+                
+                let matchesSearchTerm = !searchTerm || matchesSearch(rowText, searchTerm);
+                let matchesDate = dateFilter === 'all' || isWithinDateRange(startTime, dateFilter);
+                
+                if (matchesSearchTerm && matchesDate) {
+                    // Only show if not hidden by hide functionality
+                    const hideBtn = row.querySelector('.btn-hide, .btn-unhide');
+                    const isHidden = hideBtn && hideBtn.classList.contains('btn-unhide');
+                    
+                    if (!isHidden) {
+                        row.style.display = '';
+                        visibleCount++;
+                    }
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            
+            document.getElementById('workNoResults').style.display = visibleCount === 0 ? 'block' : 'none';
+        }
+
+		async function applyWorkFilters() {
+			try {
+				const applyFiltersBtns = document.querySelectorAll('.apply-filters-btn');
+				const workApplyFiltersBtn = applyFiltersBtns[0]; // First apply filters button (for work logs)
+				const originalText = workApplyFiltersBtn.textContent;
+				workApplyFiltersBtn.textContent = 'Loading...';
+				workApplyFiltersBtn.disabled = true;
+				
+				const response = await fetch('https://primary-production-8133.up.railway.app/webhook/562d5677-13de-4879-8f05-2aaec6120f29', {
+					method: 'GET',
+					headers: {
+						'Content-Type': 'application/json'
+					}
+				});
+				
+				if (response.ok) {
+					const workDataResponse = await response.json();
+					const allWorkData = Array.isArray(workDataResponse) ? workDataResponse : [workDataResponse];
+					
+					// Filter out hidden work logs (only show work logs where hidden is false or doesn't exist)
+					workData = allWorkData.filter(work => 
+						work.hidden !== 'true' && work.hidden !== true && work.Hidden !== 'true' && work.Hidden !== true
+					);
+					
+					const tableBody = document.getElementById('workTableBody');
+					tableBody.innerHTML = '';
+					
+					workData.forEach((work, index) => {
+						const row = createWorkRow(work, work.row_number || index + 2);
+						tableBody.appendChild(row);
+					});
+					
+					filterWorkTable();
+				} else {
+					alert(`Failed to fetch work logs. Status: ${response.status}`);
+				}
+				
+				workApplyFiltersBtn.textContent = originalText;
+				workApplyFiltersBtn.disabled = false;
+				
+			} catch (error) {
+				console.error('Error loading work logs:', error);
+				alert('Failed to apply filters. Please try again.');
+				const applyFiltersBtns = document.querySelectorAll('.apply-filters-btn');
+				const workApplyFiltersBtn = applyFiltersBtns[0];
+				workApplyFiltersBtn.textContent = 'Apply Filters';
+				workApplyFiltersBtn.disabled = false;
+			}
+		}
+
+		function toggleWorkHide(button) {
+			const row = button.closest('tr');
+			const rowId = row.dataset.id;
+			
+			// Hide the row
+			row.style.display = 'none';
+			updateWorkHiddenStatus(rowId, true);
+		}
+
+        function updateWorkHiddenStatus(rowId, hidden) {
+            // Update local data
+            const workItem = workData.find(w => (w.row_number || workData.indexOf(w) + 2).toString() === rowId);
+            if (workItem) {
+                workItem.hidden = hidden;
+            }
+            
+            // Send to Google Sheet
+            const formData = new FormData();
+            formData.append('rowNumber', rowId);
+            formData.append('hidden', hidden);
+            
+            fetch('https://primary-production-8133.up.railway.app/webhook/174f7624-b6d8-4b46-8e6f-333dd131e446', {
+                method: 'POST',
+                body: formData
+            }).catch(error => {
+                console.error('Error updating hide status:', error);
+            });
+        }
+
+        function sortWorkTable(columnIndex) {
+            const table = document.querySelector('#workTableBody');
+            const rows = Array.from(table.querySelectorAll('tr:not([style*="display: none"])'));
+            const dataRows = rows.filter(row => row.dataset.id !== 'new');
+            
+            const isAscending = !workSortDirection[columnIndex];
+            workSortDirection[columnIndex] = isAscending;
+            
+            const workTable = document.querySelector('#workTableBody').closest('table');
+            workTable.querySelectorAll('.sort-arrow').forEach((arrow, index) => {
+                if (index === columnIndex) {
+                    arrow.textContent = isAscending ? '↑' : '↓';
+                } else {
+                    arrow.textContent = '↕';
+                }
+            });
+            
+            dataRows.sort((a, b) => {
+                let aVal = a.cells[columnIndex].textContent.trim();
+                let bVal = b.cells[columnIndex].textContent.trim();
+                
+                if (columnIndex === 0 || columnIndex === 1) {
+                    aVal = new Date(aVal);
+                    bVal = new Date(bVal);
+                }
+                
+                if (aVal < bVal) return isAscending ? -1 : 1;
+                if (aVal > bVal) return isAscending ? 1 : -1;
+                return 0;
+            });
+            
+            // Re-append sorted rows
+            dataRows.forEach(row => table.appendChild(row));
+            
+            const newRows = rows.filter(row => row.dataset.id === 'new');
+            newRows.forEach(row => table.appendChild(row));
+        }
+
+		async function loadWorkLogs() {
+			if (isWorkLogLoading) { return; } // Stops if already running
+			isWorkLogLoading = true;
+		
+			const refreshBtn = document.getElementById('refreshWorkBtn');
+			if (!refreshBtn) {
+				console.error("Could not find 'refreshWorkBtn'");
+				isWorkLogLoading = false; // Reset flag if button isn't found
+				return;
+			}
+		
+			const originalText = refreshBtn.textContent;
+			try {
+				refreshBtn.textContent = 'Loading...';
+				refreshBtn.disabled = true;
+		
+				const response = await fetch('https://primary-production-8133.up.railway.app/webhook/562d5677-13de-4879-8f05-2aaec6120f29');
+		
+				if (response.ok) {
+					const workDataResponse = await response.json();
+					workData = Array.isArray(workDataResponse) ? workDataResponse : [workDataResponse];
+		
+					const tableBody = document.getElementById('workTableBody');
+					tableBody.innerHTML = '';
+		
+					workData.forEach((work, index) => {
+						const row = createWorkRow(work, work.row_number || index + 2);
+						tableBody.appendChild(row);
+					});
+		
+					filterWorkTable();
+				}
+			} catch (error) {
+				console.error("Error loading work logs:", error);
+			} finally {
+				refreshBtn.textContent = originalText;
+				refreshBtn.disabled = false;
+				isWorkLogLoading = false; // Resets the flag so it can run again
+			}
+		}
+
+        function addNewWorkRow() {
+            const tableBody = document.getElementById('workTableBody');
+            const newRow = document.createElement('tr');
+            newRow.dataset.id = 'new';
+            
+            const now = new Date();
+            const localDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+            
+			newRow.innerHTML = `
+				<td><input type="datetime-local" class="edit-input work-start-time" required></td>
+				<td><input type="datetime-local" class="edit-input work-end-time" required></td>
+				<td><span class="duration-display">-</span></td>
+				<td>
+					<select class="edit-input" required>
+						<option value="">Select Activity</option>
+						<option>Break</option>
+						<option>Help</option>
+						<option>Lunch</option>
+						<option>Meeting</option>
+						<option>Study</option>
+						<option>Support</option>
+						<option>Work - Other</option>
+						<option>Work - RGM</option>
+						<option>Timepass</option>
+					</select>
+				</td>
+				<td><input type="text" class="edit-input" placeholder="Contact name"></td>
+				<td><input type="text" class="edit-input" placeholder="Optional notes"></td>
+				<td>
+					<div class="action-buttons">
+						<button class="btn-save" onclick="saveNewWork(this)">Save</button>
+						<button class="btn-cancel" onclick="cancelNewWork(this)">Cancel</button>
+					</div>
+				</td>
+			`;
+            
+            tableBody.appendChild(newRow);
+
+			// --- ADD THIS AT THE END OF addNewWorkRow ---
+			const startTimeInput = newRow.querySelector('.work-start-time');
+			const endTimeInput = newRow.querySelector('.work-end-time');
+			const durationDisplay = newRow.querySelector('.duration-display');
+
+			function updateDuration() {
+				const start = new Date(startTimeInput.value);
+				const end = new Date(endTimeInput.value);
+
+				if (startTimeInput.value && endTimeInput.value && end > start) {
+					const diffMs = end - start;
+					durationDisplay.textContent = formatDuration(diffMs);
+				} else {
+					durationDisplay.textContent = "-";
+				}
+			}
+
+			startTimeInput.addEventListener('change', updateDuration);
+			endTimeInput.addEventListener('change', updateDuration);
+			// -----------------------------------------
+
+        }
+
+		function formatDuration(ms) {
+			if (ms < 0) return "-";
+			let hours = Math.floor(ms / 3600000);
+			let minutes = Math.round((ms % 3600000) / 60000);
+			return `${hours}h ${minutes}m`;
+		}		
+
+		function saveNewWork(button) {
+			const row = button.closest('tr');
+			const inputs = row.querySelectorAll('input, select');
+
+			// Get the values using the new indexes
+			const startTime = inputs[0].value;
+			const endTime = inputs[1].value;
+			const duration = row.querySelector('.duration-display').textContent; // Get duration from the span
+			const activity = inputs[2].value; // Index is now 2
+			const contact = inputs[3].value.trim(); // Index is now 3
+			const notes = inputs[4].value.trim(); // Index is now 4
+
+			if (!startTime || !endTime || !activity) {
+				alert('Please fill all required fields');
+				return;
+			}
+
+			const formData = new FormData();
+			formData.append('startTime', startTime);
+			formData.append('endTime', endTime);
+			formData.append('duration', duration); // Add duration to the data
+			formData.append('activity', activity);
+			formData.append('contact', contact);
+			formData.append('notes', notes);
+			formData.append('hidden', 'false');
+            
+            fetch('https://primary-production-8133.up.railway.app/webhook/1d08582a-ac04-4fbe-bac2-dd6a15f05c19', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    const cells = row.querySelectorAll('td');
+                    cells[0].innerHTML = new Date(startTime).toLocaleString();
+                    cells[1].innerHTML = new Date(endTime).toLocaleString();
+					cells[2].innerHTML = duration; 
+                    cells[3].innerHTML = activity;
+                    cells[4].innerHTML = contact || '-';
+                    cells[5].innerHTML = notes || '-';
+                    cells[6].innerHTML = `
+                        <div class="action-buttons">
+                            <button class="btn-edit" onclick="editWork(this)">Edit</button>
+                            <button class="btn-delete" onclick="deleteWork(this)">Delete</button>
+                            <button class="btn-hide" onclick="toggleWorkHide(this)">Hide</button>
+                        </div>
+                    `;
+                    
+                    row.dataset.id = Date.now();
+                } else {
+                    alert('Error saving work entry. Please try again.');
+                }
+            })
+            .catch(error => {
+                alert('Error saving work entry. Please try again.');
+            });
+        }
+
+        function cancelNewWork(button) {
+            const row = button.closest('tr');
+            row.remove();
+        }
+
+		function editWork(button) {
+			const row = button.closest('tr');
+			const cells = row.querySelectorAll('td');
+
+			// Store original values using CORRECTED indexes
+			row.dataset.originalStartTime = cells[0].textContent;
+			row.dataset.originalEndTime = cells[1].textContent;
+			row.dataset.originalDuration = cells[2].textContent;
+			row.dataset.originalActivity = cells[3].textContent;
+			row.dataset.originalContact = cells[4].textContent;
+			row.dataset.originalNotes = cells[5].textContent;
+
+			// --- Create input for Start Time ---
+			let originalStartTime = '';
+			try {
+				const startDate = new Date(cells[0].textContent);
+				if (!isNaN(startDate.getTime())) {
+					originalStartTime = new Date(startDate.getTime() - (startDate.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+				}
+			} catch (e) {}
+			cells[0].innerHTML = `<input type="datetime-local" class="edit-input work-start-time" value="${originalStartTime}">`;
+
+			// --- Create input for End Time ---
+			let originalEndTime = '';
+			try {
+				const endDate = new Date(cells[1].textContent);
+				if (!isNaN(endDate.getTime())) {
+					originalEndTime = new Date(endDate.getTime() - (endDate.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+				}
+			} catch (e) {}
+			cells[1].innerHTML = `<input type="datetime-local" class="edit-input work-end-time" value="${originalEndTime}">`;
+
+			// --- Keep Duration as a display span ---
+			cells[2].innerHTML = `<span class="duration-display">${row.dataset.originalDuration}</span>`;
+
+			// --- Create dropdown for Activity ---
+			const originalActivity = cells[3].textContent;
+			cells[3].innerHTML = `
+				<select class="edit-input">
+					<option ${originalActivity === 'Break' ? 'selected' : ''}>Break</option>
+					<option ${originalActivity === 'Help' ? 'selected' : ''}>Help</option>
+					<option ${originalActivity === 'Lunch' ? 'selected' : ''}>Lunch</option>
+					<option ${originalActivity === 'Meeting' ? 'selected' : ''}>Meeting</option>
+					<option ${originalActivity === 'Study' ? 'selected' : ''}>Study</option>
+					<option ${originalActivity === 'Support' ? 'selected' : ''}>Support</option>
+					<option ${originalActivity === 'Work - Other' ? 'selected' : ''}>Work - Other</option>
+					<option ${originalActivity === 'Work - RGM' ? 'selected' : ''}>Work - RGM</option>
+					<option ${originalActivity === 'Timepass' ? 'selected' : ''}>Timepass</option>
+				</select>
+			`;
+
+			// --- Create inputs for Contact and Notes ---
+			const originalContact = cells[4].textContent === '-' ? '' : cells[4].textContent;
+			cells[4].innerHTML = `<input type="text" class="edit-input" value="${originalContact}">`;
+			const originalNotes = cells[5].textContent === '-' ? '' : cells[5].textContent;
+			cells[5].innerHTML = `<input type="text" class="edit-input" value="${originalNotes}">`;
+
+			// --- Put Save/Cancel buttons in the correct Actions column ---
+			cells[6].innerHTML = `
+				<div class="action-buttons">
+					<button class="btn-save" onclick="saveWork(this)">Save</button>
+					<button class="btn-cancel" onclick="cancelWorkEdit(this)">Cancel</button>
+				</div>
+			`;
+
+			// --- Add the auto-duration logic ---
+			const startTimeInput = row.querySelector('.work-start-time');
+			const endTimeInput = row.querySelector('.work-end-time');
+			const durationDisplay = row.querySelector('.duration-display');
+
+			function updateDuration() {
+				const start = new Date(startTimeInput.value);
+				const end = new Date(endTimeInput.value);
+				if (startTimeInput.value && endTimeInput.value && end > start) {
+					const diffMs = end - start;
+					durationDisplay.textContent = formatDuration(diffMs);
+				} else {
+					durationDisplay.textContent = "-";
+				}
+			}
+			startTimeInput.addEventListener('change', updateDuration);
+			endTimeInput.addEventListener('change', updateDuration);
+		}
+
+		function saveWork(button) {
+			const row = button.closest('tr');
+			const cells = row.querySelectorAll('td');
+
+			// Get the new values from the correct inputs
+			const newStartTime = cells[0].querySelector('input').value;
+			const newEndTime = cells[1].querySelector('input').value;
+			const newDuration = cells[2].querySelector('span').textContent;
+			const newActivity = cells[3].querySelector('select').value;
+			const newContact = cells[4].querySelector('input').value;
+			const newNotes = cells[5].querySelector('input').value;
+
+			// Update the table cells with the new values in the correct order
+			cells[0].innerHTML = new Date(newStartTime).toLocaleString();
+			cells[1].innerHTML = new Date(newEndTime).toLocaleString();
+			cells[2].innerHTML = newDuration;
+			cells[3].innerHTML = newActivity;
+			cells[4].innerHTML = newContact || '-';
+			cells[5].innerHTML = newNotes || '-';
+
+			// Put the original action buttons back in the correct column
+			cells[6].innerHTML = `
+				<div class="action-buttons">
+					<button class="btn-edit" onclick="editWork(this)">Edit</button>
+					<button class="btn-delete" onclick="deleteWork(this)">Delete</button>
+					<button class="btn-hide" onclick="toggleWorkHide(this)">Hide</button>
+				</div>
+			`;
+
+			// Send the updated data, including duration, to your n8n workflow
+			const updateData = new FormData();
+			updateData.append('startTime', newStartTime);
+			updateData.append('endTime', newEndTime);
+			updateData.append('duration', newDuration);
+			updateData.append('activity', newActivity);
+			updateData.append('contact', newContact);
+			updateData.append('notes', newNotes);
+			updateData.append('rowNumber', row.dataset.id);
+
+			fetch('https://primary-production-8133.up.railway.app/webhook/5583eeb2-b13b-421e-9980-e32c73c06104', {
+				method: 'POST',
+				body: updateData
+			}).catch(error => {
+				alert('Failed to update work entry on server.');
+			});
+		}
+
+		function cancelWorkEdit(button) {
+			const row = button.closest('tr');
+			const cells = row.querySelectorAll('td');
+
+			// Restore from data attributes using the correct indexes
+			cells[0].innerHTML = row.dataset.originalStartTime;
+			cells[1].innerHTML = row.dataset.originalEndTime;
+			cells[2].innerHTML = row.dataset.originalDuration; // Restore Duration
+			cells[3].innerHTML = row.dataset.originalActivity; // Index is now 3
+			cells[4].innerHTML = row.dataset.originalContact;  // Index is now 4
+			cells[5].innerHTML = row.dataset.originalNotes;    // Index is now 5
+
+			// Put the action buttons back in the correct column
+			cells[6].innerHTML = `
+				<div class="action-buttons">
+					<button class="btn-edit" onclick="editWork(this)">Edit</button>
+					<button class="btn-delete" onclick="deleteWork(this)">Delete</button>
+					<button class="btn-hide" onclick="toggleWorkHide(this)">Hide</button>
+				</div>
+			`;
+		}
+
+
+        function deleteWork(button) {
+            if (confirm('Are you sure you want to delete this work entry?')) {
+                const row = button.closest('tr');
+                const rowId = row.dataset.id;
+                
+                const deleteData = new FormData();
+                deleteData.append('action', 'delete');
+                deleteData.append('rowNumber', rowId);
+                
+                fetch('https://primary-production-8133.up.railway.app/webhook/5861a05e-fdcd-45d4-a394-0b7576bbb063', {
+                    method: 'POST',
+                    body: deleteData
+                })
+                .then(response => {
+                    if (response.ok) {
+                        row.remove();
+                    } else {
+                        throw new Error(`Server deletion failed with status: ${response.status}`);
+                    }
+                })
+                .catch(error => {
+                    alert(`Failed to delete work entry from server. Error: ${error.message}`);
+                });
+            }
+        }
+
+
+        function filterTodoTable() {
+            const searchTerm = document.getElementById('todoSearch').value;
+            const dateFilter = document.getElementById('todoDateFilter').value;
+            const rows = document.querySelectorAll('#todoTableBody tr');
+            let visibleCount = 0;
+            
+            rows.forEach(row => {
+                if (row.dataset.id === 'new') return;
+                
+                const cells = row.querySelectorAll('td');
+                const rowText = Array.from(cells).slice(0, 5).map(cell => cell.textContent).join(' ');
+                // const dueDate = cells[2].textContent;
+				const dueDate = cells[3].textContent; // Changed from cells[2] to cells[3]
+                
+                let matchesSearchTerm = !searchTerm || matchesSearch(rowText, searchTerm);
+                let matchesDate = dateFilter === 'all' || isWithinDateRange(dueDate, dateFilter);
+                
+                if (matchesSearchTerm && matchesDate) {
+                    // Only show if not hidden by hide functionality
+                    const hideBtn = row.querySelector('.btn-hide, .btn-unhide');
+                    const isHidden = hideBtn && hideBtn.classList.contains('btn-unhide');
+                    
+                    if (!isHidden) {
+                        row.style.display = '';
+                        visibleCount++;
+                    }
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            
+            document.getElementById('todoNoResults').style.display = visibleCount === 0 ? 'block' : 'none';
+        }
+
+		async function applyTodoFilters() {
+			try {
+				const applyFiltersBtns = document.querySelectorAll('.apply-filters-btn');
+				const todoApplyFiltersBtn = applyFiltersBtns[1]; // Second apply filters button (for todos)
+				const originalText = todoApplyFiltersBtn.textContent;
+				todoApplyFiltersBtn.textContent = 'Loading...';
+				todoApplyFiltersBtn.disabled = true;
+				
+				const response = await fetch('https://primary-production-8133.up.railway.app/webhook/d9c12894-5fb0-4050-bb4d-ca5ff56d7699', {
+					method: 'GET',
+					headers: {
+						'Content-Type': 'application/json'
+					}
+				});
+				
+				if (response.ok) {
+					const todosDataResponse = await response.json();
+					const allTodoData = Array.isArray(todosDataResponse) ? todosDataResponse : [todosDataResponse];
+					
+					// Filter out hidden todos (only show todos where hidden is false or doesn't exist)
+					todoData = allTodoData.filter(todo => 
+						todo.hidden !== 'true' && todo.hidden !== true && todo.Hidden !== 'true' && todo.Hidden !== true
+					);
+					
+					const tableBody = document.getElementById('todoTableBody');
+					tableBody.innerHTML = '';
+					
+					todoData.forEach((todo, index) => {
+						console.log('Apply Filter todo position:', todo.Position, todo.row_number || index + 2); 
+						const row = createTodoRow(todo, todo.Position);
+						tableBody.appendChild(row);
+					});
+					
+					filterTodoTable();
+				} else {
+					alert(`Failed to fetch todos. Status: ${response.status}`);
+				}
+				
+				todoApplyFiltersBtn.textContent = originalText;
+				todoApplyFiltersBtn.disabled = false;
+				
+			} catch (error) {
+				console.error('Error loading todos:', error);
+				alert('Failed to apply filters. Please try again.');
+				const applyFiltersBtns = document.querySelectorAll('.apply-filters-btn');
+				const todoApplyFiltersBtn = applyFiltersBtns[1];
+				todoApplyFiltersBtn.textContent = 'Apply Filters';
+				todoApplyFiltersBtn.disabled = false;
+			}
+		}
+
+		function toggleTodoHide(button) {
+			const row = button.closest('tr');
+			const rowId = row.dataset.id;
+			console.log('Hide Todo button:', rowId);
+			
+			// Hide the row
+			row.style.display = 'none';
+			updateTodoHiddenStatus(rowId, true);
+		}
+
+        function updateTodoHiddenStatus(rowId, hidden) {
+            // Update local data
+            const todoItem = todoData.find(t => (t.row_number || todoData.indexOf(t) + 2).toString() === rowId);
+            if (todoItem) {
+                todoItem.hidden = hidden;
+            }
+            
+            // Send to Google Sheet
+            const formData = new FormData();
+            formData.append('position', rowId);
+            formData.append('hidden', hidden);
+            
+            fetch('https://primary-production-8133.up.railway.app/webhook/06c6e6b7-849b-4d99-bc8c-5105ecd5022e', {
+                method: 'POST',
+                body: formData
+            }).catch(error => {
+                console.error('Error updating todo hide status:', error);
+            });
+        }
+
+        function updateRowColor(row) {
+            const statusSpan = row.querySelector('.status span');
+            const dueDateCell = row.querySelector('.due-date');
+            
+            if (!statusSpan || !dueDateCell) return;
+            
+            const status = statusSpan.textContent;
+            const dueDate = dueDateCell.textContent;
+            
+            row.classList.remove('todo-row-completed', 'todo-row-overdue', 'todo-row-pending');
+            
+            if (status === 'Completed') {
+                row.classList.add('todo-row-completed');
+            } else if (new Date(dueDate) < new Date()) {
+                row.classList.add('todo-row-overdue');
+            } else {
+                row.classList.add('todo-row-pending');
+            }
+        }
+
+		async function loadTodos() {
+			// 1. If the function is already running, stop.
+			if (isTodosLoading) {
+				return; 
+			}
+			// 2. Set the flag to true to block other calls.
+			isTodosLoading = true;
+		
+			const todoRefreshBtn = document.getElementById('refreshTodoBtn');
+			if (!todoRefreshBtn) {
+				isTodosLoading = false; // Reset flag if button isn't found
+				return;
+			}
+		
+			const originalText = todoRefreshBtn.textContent;
+			try {
+				todoRefreshBtn.textContent = 'Loading...';
+				todoRefreshBtn.disabled = true;
+		
+				const response = await fetch('https://primary-production-8133.up.railway.app/webhook/d9c12894-5fb0-4050-bb4d-ca5ff56d7699');
+		
+				if (response.ok) {
+					const todosDataResponse = await response.json();
+					todoData = Array.isArray(todosDataResponse) ? todosDataResponse : [todosDataResponse];
+		
+					const tableBody = document.getElementById('todoTableBody');
+					tableBody.innerHTML = '';
+		
+					todoData.forEach((todo, index) => {
+						console.log('Loading todo position:', todo.Position); 
+						const row = createTodoRow(todo, todo.Position);
+						tableBody.appendChild(row);
+					});
+		
+					filterTodoTable();
+				}
+			} catch (error) {
+				console.error("Error in loadTodos:", error);
+			} finally {
+				// 3. ALWAYS reset the button and the flag.
+				todoRefreshBtn.textContent = originalText;
+				todoRefreshBtn.disabled = false;
+				isTodosLoading = false;
+			}
+		}
+
+
+		async function saveNewTodo(button) {
+			const row = button.closest('tr');
+			const inputs = row.querySelectorAll('input, select');
+			const position = row.querySelector('.serial-number').textContent;
+
+			const task = inputs[0].value.trim();
+			const priority = inputs[1].value;
+			const dueDate = inputs[2].value;
+			const status = inputs[3].value;
+
+			if (!task || !priority || !dueDate) {
+				alert('Please fill all required fields');
+				return;
+			}
+
+			const formData = new FormData();
+			formData.append('position', position);
+			formData.append('taskDescription', task);
+			formData.append('priority', priority);
+			formData.append('dueDate', dueDate);
+			formData.append('status', status);
+			formData.append('createTimestamp', new Date().toISOString());
+			formData.append('lastUpdateTimestamp', new Date().toISOString());
+			formData.append('hidden', 'false');
+
+			try {
+				const response = await fetch('https://primary-production-8133.up.railway.app/webhook/66db8412-1cef-4b62-bae3-89180d58dc9a', {
+					method: 'POST',
+					body: formData
+				});
+
+				if (response.ok) {
+					// Assumes your n8n workflow returns the full data for the new row
+					const newTodoObject = await response.json(); 
+					console.log('Full n8n response:', newTodoObject);
+
+					// --- FIX #1: Add the new task to your local data array ---
+					todoData.push(newTodoObject);
+
+					// --- FIX #2: Use the permanent Position number as the ID ---
+					row.dataset.id = newTodoObject.Position; 
+					console.log('Save new todo:', row.dataset.id);
+
+					const cells = row.querySelectorAll('td');
+					cells[1].innerHTML = task;
+					cells[2].innerHTML = `<span class="priority-${priority.toLowerCase()}">${priority}</span>`;
+					cells[3].innerHTML = dueDate;
+					cells[4].innerHTML = `<span class="status-${status.replace(' ', '-').toLowerCase()}">${status}</span>`;
+					cells[6].innerHTML = `
+						<div class="arrow-buttons">
+							<button class="btn-move-top" onclick="moveTask(this, 'top')" title="Move to Top">⤴</button>
+							<button class="btn-move-up" onclick="moveTask(this, 'up')" title="Move Up">↑</button>
+							<button class="btn-move-down" onclick="moveTask(this, 'down')" title="Move Down">↓</button>
+							<button class="btn-move-bottom" onclick="moveTask(this, 'bottom')" title="Move to Bottom">⤵</button>
+						</div>
+						<div class="action-buttons">
+							<button class="btn-edit" onclick="editTodo(this)">Edit</button>
+							<button class="btn-delete" onclick="deleteTodo(this)">Delete</button>
+							<button class="btn-hide" onclick="toggleTodoHide(this)">Hide</button>
+						</div>
+					`;
+					updateRowColor(row);
+				} else {
+					alert('Error: Could not save the new task.');
+				}
+			} catch (error) {
+				console.error('Save failed:', error);
+				alert('An error occurred while saving.');
+			}
+		}
+
+        function cancelNewTodo(button) {
+            const row = button.closest('tr');
+            row.remove();
+        }
+
+        function editTodo(button) {
+            const row = button.closest('tr');
+            const cells = row.querySelectorAll('td');
+            
+			const positionId = row.dataset.id;
+			console.log('editTodo - positionId:', positionId);
+            const originalTask = cells[1].textContent;
+            const originalPriority = cells[2].querySelector('span').textContent;
+            const originalDueDate = cells[3].textContent;
+            const originalStatus = cells[4].querySelector('span').textContent;
+            
+            cells[1].innerHTML = `<input type="text" class="edit-input" value="${originalTask}">`;
+            cells[2].innerHTML = `
+                <select class="edit-input">
+                    <option ${originalPriority === 'High' ? 'selected' : ''}>High</option>
+                    <option ${originalPriority === 'Medium' ? 'selected' : ''}>Medium</option>
+                    <option ${originalPriority === 'Low' ? 'selected' : ''}>Low</option>
+                </select>
+            `;
+            cells[3].innerHTML = `<input type="date" class="edit-input" value="${originalDueDate}">`;
+            cells[4].innerHTML = `
+                <select class="edit-input">
+                    <option ${originalStatus === 'Not Started' ? 'selected' : ''}>Not Started</option>
+                    <option ${originalStatus === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                    <option ${originalStatus === 'Completed' ? 'selected' : ''}>Completed</option>
+                </select>
+            `;
+            
+            cells[6].innerHTML = `
+                <div class="action-buttons">
+                    <button class="btn-save" onclick="saveTodo(this, '${positionId}', '${originalTask}', '${originalPriority}', '${originalDueDate}', '${originalStatus}')">Save</button>
+                    <button class="btn-cancel" onclick="cancelEdit(this, '${originalTask}', '${originalPriority}', '${originalDueDate}', '${originalStatus}')">Cancel</button>
+                </div>
+            `;
+        }
+
+        function saveTodo(button, positionId, originalTask, originalPriority, originalDueDate, originalStatus) {
+            const row = button.closest('tr');
+            const cells = row.querySelectorAll('td');
+            
+            const newTask = cells[1].querySelector('input').value;
+            const newPriority = cells[2].querySelector('select').value;
+            const newDueDate = cells[3].querySelector('input').value;
+            const newStatus = cells[4].querySelector('select').value;
+            
+            cells[1].innerHTML = newTask;
+            cells[2].innerHTML = `<span class="priority-${newPriority.toLowerCase()}">${newPriority}</span>`;
+            cells[3].innerHTML = newDueDate;
+            cells[4].innerHTML = `<span class="status-${newStatus.replace(' ', '-').toLowerCase()}">${newStatus}</span>`;
+            
+            cells[6].innerHTML = `
+                <div class="action-buttons">
+                    <button class="btn-edit" onclick="editTodo(this)">Edit</button>
+                    <button class="btn-delete" onclick="deleteTodo(this)">Delete</button>
+                    <button class="btn-hide" onclick="toggleTodoHide(this)">Hide</button>
+                </div>
+            `;
+            
+            updateRowColor(row);
+            
+            const updateData = new FormData();
+            updateData.append('taskDescription', newTask);
+            updateData.append('priority', newPriority);
+            updateData.append('dueDate', newDueDate);
+            updateData.append('status', newStatus);
+            updateData.append('position', positionId);
+            
+            fetch('https://primary-production-8133.up.railway.app/webhook/ae0d6082-9a30-4eb3-b3f9-e587feafb6fa', {
+                method: 'POST',
+                body: updateData
+            }).catch(error => {
+                alert('Failed to update todo on server.');
+            });
+        }
+
+        function cancelEdit(button, originalTask, originalPriority, originalDueDate, originalStatus) {
+            const row = button.closest('tr');
+            const cells = row.querySelectorAll('td');
+            
+            cells[1].innerHTML = originalTask;
+            cells[2].innerHTML = `<span class="priority-${originalPriority.toLowerCase()}">${originalPriority}</span>`;
+            cells[3].innerHTML = originalDueDate;
+            cells[4].innerHTML = `<span class="status-${originalStatus.replace(' ', '-').toLowerCase()}">${originalStatus}</span>`;
+            
+            cells[6].innerHTML = `
+                <div class="action-buttons">
+                    <button class="btn-edit" onclick="editTodo(this)">Edit</button>
+                    <button class="btn-delete" onclick="deleteTodo(this)">Delete</button>
+                    <button class="btn-hide" onclick="toggleTodoHide(this)">Hide</button>
+                </div>
+            `;
+            
+            updateRowColor(row);
+        }
+
+		function deleteTodo(button) {
+			if (confirm('Are you sure you want to delete this todo?')) {
+				const row = button.closest('tr');
+				// This is now the permanent Position number, thanks to our other fixes
+				const positionId = row.dataset.id; 
+				console.log('Delete ID:', positionId);
+
+				const deleteData = new FormData();
+				deleteData.append('position', positionId); // Send the 'position' instead
+
+				// IMPORTANT: This must point to a NEW or MODIFIED n8n workflow
+				fetch('https://primary-production-8133.up.railway.app/webhook/9e7e0775-dd9e-4c1b-be66-98176e4fdb7a', {
+					method: 'POST',
+					body: deleteData
+				})
+				.then(response => {
+					if (response.ok) {
+						row.remove();
+						// Optional: You could add logic here to update your local todoData array
+					} else {
+					alert('Failed to delete todo from server.');
+					}
+				})
+				.catch(error => {
+					console.error('Delete error:', error);
+					alert(`Failed to delete todo. Error: ${error.message}`);
+				});
+			}
+		}
+
+
+
+
+		// Hydration & Fitness Tracker Variables
+		let currentWaterML = 0;
+		let currentExerciseMin = 0;
+		let dailyWaterSessions = 0;
+		let dailyExerciseSessions = 0;
+		let totalPoints = 0;
+		let currentStreak = 0;
+		let isDNDMode = false;
+		let notificationInterval;
+		let isNotificationActive = false;
+		
+		// Load saved data
+		function loadHydrationData() {
+			const savedData = localStorage.getItem('hydrationFitnessData');
+			if (savedData) {
+				const data = JSON.parse(savedData);
+				currentWaterML = data.currentWaterML || 0;
+				currentExerciseMin = data.currentExerciseMin || 0;
+				dailyWaterSessions = data.dailyWaterSessions || 0;
+				dailyExerciseSessions = data.dailyExerciseSessions || 0;
+				totalPoints = data.totalPoints || 0;
+				currentStreak = data.currentStreak || 0;
+				
+				updateWaterDisplay();
+				updateExerciseDisplay();
+				updateStats();
+			}
+		}
+		
+		// Save data
+		function saveHydrationData() {
+			const data = {
+				currentWaterML,
+				currentExerciseMin,
+				dailyWaterSessions,
+				dailyExerciseSessions,
+				totalPoints,
+				currentStreak,
+				lastSaveDate: new Date().toDateString()
+			};
+			localStorage.setItem('hydrationFitnessData', JSON.stringify(data));
+		}
+		
+		// Add water
+		function addWater() {
+			const input = document.getElementById('waterInput');
+			const amount = parseInt(input.value);
+			
+			if (amount && amount > 0) {
+				currentWaterML += amount;
+				dailyWaterSessions++;
+				totalPoints += 5;
+				
+				if (currentWaterML >= 2000) {
+					currentWaterML = 2000;
+					totalPoints += 20; // Bonus for reaching goal
+				}
+				
+				input.value = '';
+				updateWaterDisplay();
+				updateStats();
+				saveHydrationData();
+				
+// Send to webhook
+                const formData = new FormData();
+                formData.append('timestamp', new Date().toISOString());
+                formData.append('amount', amount);
+                formData.append('totalWaterML', currentWaterML);
+                formData.append('sessionNumber', dailyWaterSessions);
+                formData.append('pointsEarned', currentWaterML >= 2000 ? 25 : 5); // 5 + 20 bonus if goal reached
+
+                fetch('https://primary-production-8133.up.railway.app/webhook/d8f56079-91b2-497b-bb41-ce4686ecda41', {
+                    method: 'POST',
+                    body: formData
+                }).catch(error => {
+                    console.error('Error logging water:', error);
+                });
+
+				showSuccessMessage('💧 Great job! Stay hydrated!');
+			}
+		}
+		
+		// Add exercise
+		function addExercise() {
+			const input = document.getElementById('exerciseInput');
+			const minutes = parseInt(input.value);
+			
+			if (minutes && minutes > 0) {
+				currentExerciseMin += minutes;
+				dailyExerciseSessions++;
+				totalPoints += 10;
+				
+				if (currentExerciseMin >= 60) {
+					currentExerciseMin = 60;
+					totalPoints += 30; // Bonus for reaching goal
+				}
+				
+				input.value = '';
+				updateExerciseDisplay();
+				updateStats();
+				saveHydrationData();
+
+                // Send to webhook
+                const formData = new FormData();
+                formData.append('timestamp', new Date().toISOString());
+                formData.append('minutes', minutes);
+                formData.append('totalExerciseMin', currentExerciseMin);
+                formData.append('sessionNumber', dailyExerciseSessions);
+                formData.append('pointsEarned', currentExerciseMin >= 60 ? 40 : 10); // 10 + 30 bonus if goal reached
+
+                fetch('https://primary-production-8133.up.railway.app/webhook/08cf5cb1-0b38-4d7e-adbd-1836c3134dd4', {
+                    method: 'POST',
+                    body: formData
+                }).catch(error => {
+                    console.error('Error logging exercise:', error);
+                });
+				
+				showSuccessMessage('💪 Awesome! Keep moving!');
+			}
+		}
+		
+		// Update water display
+		function updateWaterDisplay() {
+			const waterLevel = document.getElementById('waterLevel');
+			const waterCount = document.getElementById('waterCount');
+			
+			const percentage = Math.min((currentWaterML / 2000) * 100, 100);
+			waterLevel.style.height = percentage + '%';
+			waterCount.textContent = currentWaterML;
+		}
+		
+		// Update exercise display
+		function updateExerciseDisplay() {
+			const strengthLevel = document.getElementById('strengthLevel');
+			const exerciseCount = document.getElementById('exerciseCount');
+			
+			const percentage = Math.min((currentExerciseMin / 60) * 100, 100);
+			strengthLevel.style.width = percentage + '%';
+			exerciseCount.textContent = currentExerciseMin;
+		}
+		
+		// Update stats
+		function updateStats() {
+			document.getElementById('todayWater').textContent = dailyWaterSessions;
+			document.getElementById('todayExercise').textContent = dailyExerciseSessions;
+			document.getElementById('totalPoints').textContent = totalPoints;
+			document.getElementById('currentStreak').textContent = currentStreak;
+			
+			// Calculate weekly average (simplified)
+			const weeklyAvg = Math.round((dailyWaterSessions + dailyExerciseSessions) / 2);
+			document.getElementById('weeklyAverage').textContent = weeklyAvg;
+		}
+		
+		// Show success message
+		function showSuccessMessage(message) {
+			// Create a temporary success popup
+			const popup = document.createElement('div');
+			popup.style.cssText = `
+				position: fixed;
+				top: 20px;
+				right: 20px;
+				background: #48bb78;
+				color: white;
+				padding: 15px 20px;
+				border-radius: 8px;
+				z-index: 1001;
+				font-weight: bold;
+				animation: slideIn 0.3s ease;
+			`;
+			popup.textContent = message;
+			document.body.appendChild(popup);
+			
+			setTimeout(() => popup.remove(), 3000);
+		}
+		
+		// Toggle Do Not Disturb
+		function toggleDND() {
+			isDNDMode = !isDNDMode;
+			const button = document.getElementById('dndToggle');
+			
+			if (isDNDMode) {
+				button.textContent = '🔴 Do Not Disturb: ON';
+				button.classList.add('active');
+			} else {
+				button.textContent = '🔕 Do Not Disturb: OFF';
+				button.classList.remove('active');
+			}
+		}
+		
+		// Show notification
+		function showNotification(type) {
+			if (isDNDMode || isNotificationActive) return;
+			
+			isNotificationActive = true;
+			const overlay = document.getElementById('notificationOverlay');
+			const popup = document.getElementById('notificationPopup');
+			const icon = document.getElementById('notificationIcon');
+			const title = document.getElementById('notificationTitle');
+			const message = document.getElementById('notificationMessage');
+			
+			const notifications = {
+				water: {
+					icon: '💧',
+					title: 'Time to Hydrate!',
+					message: 'It\'s been 2 hours! Your body needs water to stay energized. पानी पीना ज़रूरी है!'
+				},
+				exercise: {
+					icon: '💪',
+					title: 'Movement Break!',
+					message: 'Time for some exercise! Even 5 minutes can boost your energy. चलिए थोड़ा exercise करते हैं!'
+				}
+			};
+			
+			const notif = notifications[type];
+			icon.textContent = notif.icon;
+			title.textContent = notif.title;
+			message.textContent = notif.message;
+			
+			overlay.style.display = 'block';
+			popup.style.display = 'block';
+			
+			// Play notification sound (if browser allows)
+			try {
+				const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmMgBS6F1+/FeycGKYHL8tyEOQgVY7zq4ptGFgxMo+DztV0fcDyCy+yYPgoQVbnr7apQDAhAle+LUSEGKHjN8N2OQAlMe87w5Z5KEgxLpd/wql0feDOCz+3JeSUIKoTM+dxmORcKKHfR8N2OQAlMe87w5Z5KEgxLpd/wql0feDOCz+3JeSUIKoTM+dxmORcKKHfR8N2OQAlMe87w5Z5KEgxLpd/wql0feDOCz+3JeSUIKoTM+dxmORcKKHfR8N2OQAlMe87w5Z5KEgxLpd/wql0feDOCz+3JeSUIKoTM+dxmOR');
+				audio.play().catch(() => {}); // Ignore if audio fails
+			} catch (e) {}
+		}
+		
+		// Mark notification as completed
+		function markCompleted(type) {
+			dismissNotification();
+			
+			if (type === 'water') {
+				// Auto-add 250ml
+				currentWaterML += 250;
+				dailyWaterSessions++;
+				totalPoints += 10;
+				updateWaterDisplay();
+				showSuccessMessage('💧 Great! Water logged automatically!');
+			} else if (type === 'exercise') {
+				// Auto-add 5 minutes
+				currentExerciseMin += 5;
+				dailyExerciseSessions++;
+				totalPoints += 15;
+				updateExerciseDisplay();
+				showSuccessMessage('💪 Awesome! Exercise logged!');
+			}
+			
+			updateStats();
+			saveHydrationData();
+		}
+		
+		// Snooze notification
+		function snoozeNotification() {
+			dismissNotification();
+			setTimeout(() => {
+				if (!isDNDMode) {
+					showNotification(Math.random() > 0.5 ? 'water' : 'exercise');
+				}
+			}, 10 * 60 * 1000); // 10 minutes
+		}
+		
+		// Dismiss notification
+		function dismissNotification() {
+			document.getElementById('notificationOverlay').style.display = 'none';
+			document.getElementById('notificationPopup').style.display = 'none';
+			isNotificationActive = false;
+		}
+		
+		// Test notification
+		function testNotification() {
+			showNotification(Math.random() > 0.5 ? 'water' : 'exercise');
+		}
+		
+		// Start notification timer
+		function startNotificationTimer() {
+			// Show notification every 2 hours (7200000 ms)
+			notificationInterval = setInterval(() => {
+				if (!isDNDMode) {
+					const type = Math.random() > 0.5 ? 'water' : 'exercise';
+					showNotification(type);
+				}
+			}, 2 * 60 * 60 * 1000); // 2 hours
+		}
+		
+		// Initialize hydration tracker
+		function initHydrationTracker() {
+			loadHydrationData();
+			startNotificationTimer();
+			
+			// Check if it's a new day and reset daily counters
+			const lastSave = localStorage.getItem('hydrationFitnessData');
+			if (lastSave) {
+				const data = JSON.parse(lastSave);
+				const today = new Date().toDateString();
+				if (data.lastSaveDate !== today) {
+					// New day - reset daily counters but keep streak if goals were met
+					if (currentWaterML >= 2000 && currentExerciseMin >= 60) {
+						currentStreak++;
+					} else {
+						currentStreak = 0;
+					}
+					
+					currentWaterML = 0;
+					currentExerciseMin = 0;
+					dailyWaterSessions = 0;
+					dailyExerciseSessions = 0;
+					
+					updateWaterDisplay();
+					updateExerciseDisplay();
+					updateStats();
+					saveHydrationData();
+				}
+			}
+		}
+			
+		// Move task function
+		function moveTask(button, direction) {
+			const row = button.closest('tr');
+			const tableBody = document.getElementById('todoTableBody');
+			const allRows = Array.from(tableBody.querySelectorAll('tr[data-id]:not([data-id="new"])'));
+			const currentIndex = allRows.indexOf(row);
+			
+			if (currentIndex === -1) return;
+			
+			let newIndex;
+			switch(direction) {
+				case 'top':
+					newIndex = 0;
+					break;
+				case 'up':
+					newIndex = Math.max(0, currentIndex - 1);
+					break;
+				case 'down':
+					newIndex = Math.min(allRows.length - 1, currentIndex + 1);
+					break;
+				case 'bottom':
+					newIndex = allRows.length - 1;
+					break;
+			}
+			
+			if (newIndex !== currentIndex) {
+				// Move the row in DOM
+				if (newIndex === 0) {
+					tableBody.insertBefore(row, allRows[0]);
+				} else if (newIndex === allRows.length - 1) {
+					tableBody.appendChild(row);
+				} else if (newIndex > currentIndex) {
+					tableBody.insertBefore(row, allRows[newIndex + 1]);
+				} else {
+					tableBody.insertBefore(row, allRows[newIndex]);
+				}
+				
+				// Update serial numbers
+				// updateSerialNumbers();
+				
+				// Only call savePositionChange if you have set up the webhook
+				// Comment out this line for now if webhook is not ready:
+				// savePositionChange(row.dataset.id, direction, currentIndex + 1);
+				
+				console.log(`Moved task ${direction} from position ${currentIndex + 1} to ${newIndex + 1}`);
+			}
+		}
+		
+		// // Update serial numbers
+		// function updateSerialNumbers() {
+		// 	const tableBody = document.getElementById('todoTableBody');
+		// 	const rows = tableBody.querySelectorAll('tr[data-id]:not([data-id="new"])');
+			
+		// 	rows.forEach((row, index) => {
+		// 		const serialCell = row.querySelector('.serial-number');
+		// 		if (serialCell) {
+		// 			serialCell.textContent = index + 1;
+		// 		}
+		// 	});
+		// }
+		
+		// Save position change to server
+		function savePositionChange(rowId, direction, currentPosition) {
+			const formData = new FormData();
+			formData.append('rowNumber', rowId);
+			formData.append('action', `move_${direction}`);
+			formData.append('currentPosition', currentPosition);
+			
+			// REPLACE THIS URL WITH YOUR ACTUAL N8N WEBHOOK URL
+			const webhookUrl = 'https://primary-production-8133.up.railway.app/webhook/YOUR_WEBHOOK_ID_HERE';
+			
+			fetch(webhookUrl, {
+				method: 'POST',
+				body: formData
+			})
+			.then(response => {
+				if (!response.ok) {
+					throw new Error(`HTTP error! status: ${response.status}`);
+				}
+				console.log('Position updated successfully');
+			})
+			.catch(error => {
+				console.error('Error updating position:', error);
+				// Don't show alert for now, just log the error
+				// alert('Failed to save position change.');
+			});
+		}
+		
+		// UPDATE: Modified createTodoRow function (replace your existing one)
+		function createTodoRow(todo, rowId) {
+			const row = document.createElement('tr');
+			row.dataset.id = rowId;
+			
+			const isHidden = todo.hidden === 'true' || todo.hidden === true;
+			
+			let rowClass = 'todo-row-pending';
+			if (todo.Status === 'Completed') {
+				rowClass = 'todo-row-completed';
+			} else if (new Date(todo['Due Date']) < new Date()) {
+				rowClass = 'todo-row-overdue';
+			}
+			row.className = rowClass;
+			
+			const priorityClass = `priority-${todo.Priority.toLowerCase()}`;
+			const statusClass = `status-${todo.Status.replace(' ', '-').toLowerCase()}`;
+			const createDate = todo.Create_ts ? new Date(todo.Create_ts).toISOString().split('T')[0] : '';
+			const position = todo.Position || 1; // Default position
+			
+			row.innerHTML = `
+				<td class="serial-number">${position}</td>
+				<td class="task-desc">${todo.Description}<span class="edit-icon" onclick="openTaskDetails(${todo.Position})">✏️</span></td>
+				<td class="priority"><span class="${priorityClass}">${todo.Priority}</span></td>
+				<td class="due-date">${todo['Due Date']}</td>
+				<td class="status"><span class="${statusClass}">${todo.Status}</span></td>
+				<td class="created">${createDate}</td>
+				<td>
+					<div class="arrow-buttons">
+						<button class="btn-move-top" onclick="moveTask(this, 'top')" title="Move to Top">⤴</button>
+						<button class="btn-move-up" onclick="moveTask(this, 'up')" title="Move Up">↑</button>
+						<button class="btn-move-down" onclick="moveTask(this, 'down')" title="Move Down">↓</button>
+						<button class="btn-move-bottom" onclick="moveTask(this, 'bottom')" title="Move to Bottom">⤵</button>
+					</div>
+					<div class="action-buttons">
+						<button class="btn-edit" onclick="editTodo(this)">Edit</button>
+						<button class="btn-delete" onclick="deleteTodo(this)">Delete</button>
+						<button class="btn-hide" onclick="toggleTodoHide(this)">Hide</button>
+					</div>
+				</td>
+			`;
+			
+			return row;
+		}
+		
+		function addNewTodoRow() {
+			const tableBody = document.getElementById('todoTableBody');
+			const newRow = document.createElement('tr');
+			newRow.dataset.id = 'new'; // A temporary ID for an unsaved row
+
+			// Get the highest position from your master list of SAVED tasks
+			const maxPositionInData = Math.max(0, ...todoData.map(todo => todo.Position || 0));
+
+			// Get the highest position from the tasks CURRENTLY in the table (including other new, unsaved ones)
+			let maxPositionInTable = 0;
+			document.querySelectorAll('#todoTableBody .serial-number').forEach(num => {
+				const positionValue = parseInt(num.textContent);
+				if (positionValue > maxPositionInTable) {
+					maxPositionInTable = positionValue;
+				}
+			});
+
+			// The true next position is 1 + the highest number from either source
+			const nextPosition = Math.max(maxPositionInData, maxPositionInTable) + 1;
+
+			newRow.innerHTML = `
+				<td class="serial-number">${nextPosition}</td>
+				<td><input type="text" class="edit-input" placeholder="Enter task description" required></td>
+				<td>
+					<select class="edit-input" required>
+						<option value="">Select Priority</option>
+						<option value="High">High</option>
+						<option value="Medium">Medium</option>
+						<option value="Low">Low</option>
+					</select>
+				</td>
+				<td><input type="date" class="edit-input" required></td>
+				<td>
+					<select class="edit-input" required>
+						<option value="Not Started" selected>Not Started</option>
+						<option value="In Progress">In Progress</option>
+						<option value="Completed">Completed</option>
+					</select>
+				</td>
+				<td>${new Date().toISOString().split('T')[0]}</td>
+				<td>
+					<div class="action-buttons">
+						<button class="btn-save" onclick="saveNewTodo(this)">Save</button>
+						<button class="btn-cancel" onclick="cancelNewTodo(this)">Cancel</button>
+					</div>
+				</td>
+			`;
+
+			tableBody.appendChild(newRow);
+		}
+		
+		// UPDATE: Modified sortTodoTable function (adjust column indices)
+		function sortTodoTable(columnIndex) {
+			const table = document.querySelector('#todoTableBody');
+			const rows = Array.from(table.querySelectorAll('tr:not([style*="display: none"])'));
+			const dataRows = rows.filter(row => row.dataset.id !== 'new');
+			
+			const isAscending = !todoSortDirection[columnIndex];
+			todoSortDirection[columnIndex] = isAscending;
+			
+			const todoTable = document.querySelector('#todoTableBody').closest('table');
+			todoTable.querySelectorAll('.sort-arrow').forEach((arrow, index) => {
+				if (index === columnIndex - 1) { // Adjust for new No. column
+					arrow.textContent = isAscending ? '↑' : '↓';
+				} else {
+					arrow.textContent = '↕';
+				}
+			});
+			
+			dataRows.sort((a, b) => {
+				let aVal = a.cells[columnIndex].textContent.trim();
+				let bVal = b.cells[columnIndex].textContent.trim();
+				
+				if (columnIndex === 2) { // Priority column (adjusted index)
+					const priorityOrder = { 'High': 3, 'Medium': 2, 'Low': 1 };
+					aVal = priorityOrder[aVal] || 0;
+					bVal = priorityOrder[bVal] || 0;
+				} else if (columnIndex === 3 || columnIndex === 5) { // Due Date and Created columns
+					aVal = new Date(aVal);
+					bVal = new Date(bVal);
+				} else if (columnIndex === 4) { // Status column
+					const statusOrder = { 'Not Started': 1, 'In Progress': 2, 'Completed': 3 };
+					aVal = statusOrder[aVal] || 0;
+					bVal = statusOrder[bVal] || 0;
+				}
+				
+				if (aVal < bVal) return isAscending ? -1 : 1;
+				if (aVal > bVal) return isAscending ? 1 : -1;
+				return 0;
+			});
+			
+			dataRows.forEach(row => table.appendChild(row));
+			
+			// Update serial numbers after sorting
+			// updateSerialNumbers();
+			
+			const newRows = rows.filter(row => row.dataset.id === 'new');
+			newRows.forEach(row => table.appendChild(row));
+		}
+		
+
+		async function openTaskDetails(taskId) {
+			const modal = document.getElementById('task-details-modal');
+			modal.dataset.currentTaskId = taskId;
+			const detailsTextarea = document.getElementById('task-details-textarea');
+			const saveBtn = document.getElementById('save-details-btn');
+		
+			// Store taskId on the save button so it knows which task to update
+			saveBtn.dataset.taskId = taskId;
+		
+			modal.style.display = 'block';
+			loadSubtasks(taskId); // Add this line
+			detailsTextarea.value = "Loading...";
+		
+			// IMPORTANT: Replace with the URL for your workflow that gets a single task
+			const getDetailsUrl = 'https://primary-production-8133.up.railway.app/webhook/684bba32-204f-4b8a-9c60-d57ff9d5b76b'; 
+		
+			try {
+				const response = await fetch(`${getDetailsUrl}?id=${taskId}`);
+				if (response.ok) {
+					const taskData = await response.json();
+					// Assumes your workflow returns a 'Details' property
+					// detailsTextarea.value = taskData[0]['Details'] || ''; 
+					if (taskData && taskData.length > 0) {
+						// This part only runs if a task was found
+						detailsTextarea.value = taskData[0].Details || '';
+					} else {
+						// This part runs if no task was found, preventing the crash
+						detailsTextarea.value = "Error: Task not found.";
+					}					
+				} else {
+					detailsTextarea.value = "Failed to load details.";
+				}
+			} catch (error) {
+				console.error("Error fetching task details:", error);
+				detailsTextarea.value = "Error: Could not connect to the server.";
+			}
+		}
+		
+		function closeTaskDetails() {
+			// Find the modal element
+			const modal = document.getElementById('task-details-modal');
+			
+			// Hide the modal
+			if (modal) {
+				modal.style.display = 'none';
+			}
+		}		
+
+		async function addNewSubtask() {
+			const inputElement = document.getElementById('new-subtask-input');
+			const subtaskList = document.getElementById('subtask-list');
+			const modal = inputElement.closest('#task-details-modal');
+			const taskText = inputElement.value.trim();
+
+			if (taskText === '') return;
+
+			// --- LOGIC TO CALCULATE THE NEXT POSITION ---
+			let maxPosition = 0;
+			subtaskList.querySelectorAll('.subtask-item').forEach(item => {
+				const position = parseInt(item.dataset.position);
+				if (position > maxPosition) maxPosition = position;
+			});
+			const nextPosition = maxPosition + 1;
+			// ------------------------------------------
+
+			const parentTaskId = modal.dataset.currentTaskId;
+
+			// --- STEP 1: INSTANTLY CREATE AND DISPLAY THE NEW SUB-TASK ---
+			const listItem = document.createElement('li');
+			listItem.className = 'subtask-item';
+			listItem.dataset.position = nextPosition; // Set the frontend number immediately
+			
+			// Use the text from the input box to display the new item right away
+			listItem.innerHTML = getSubtaskDisplayHTML(taskText);
+			
+			subtaskList.appendChild(listItem);
+			inputElement.value = '';
+			inputElement.focus();
+			// -------------------------------------------------------------
+
+			// --- STEP 2: SAVE THE DATA TO N8N IN THE BACKGROUND ---
+			// IMPORTANT: Make sure this is your "Add Sub-task" workflow URL
+			const addSubtaskUrl = 'https://primary-production-8133.up.railway.app/webhook/f6a6de63-a086-4513-bbb4-953a41c10836';
+
+			const formData = new FormData();
+			formData.append('parentTaskId', parentTaskId);
+			formData.append('subtaskId', nextPosition);
+			formData.append('subtaskText', taskText);
+
+			try {
+				const response = await fetch(addSubtaskUrl, { method: 'POST', body: formData });
+				if (response.ok) {
+					const result = await response.json();
+					
+					// Silently update the new item with the permanent UniqueId from the server
+					// This is crucial for future edit/delete actions
+					listItem.dataset.subtaskId = result[0].UniqueId;
+					// console.log(`Sub-task ${nextPosition} saved and permanent ID set to ${result[0].UniqueId}`);
+					console.log(`Sub-task ${nextPosition} saved and permanent ID set to ${listItem.dataset.subtaskId}`);
+				} else {
+					// If saving fails, show an error and remove the temporary item
+					alert('Failed to save sub-task. Please try again.');
+					listItem.remove();
+				}
+			} catch (error) {
+				console.error('Error:', error);
+				alert('Error connecting to the server. Please try again.');
+				listItem.remove();
+			}
+		}
+
+		function editSubtask(editIcon) {
+			const listItem = editIcon.closest('.subtask-item'); // This correctly finds the <li>
+			const textSpan = listItem.querySelector('.subtask-item-text');
+			const currentText = textSpan.textContent;
+
+			listItem.classList.add('editing');
+			listItem.dataset.originalText = currentText;
+
+			// Replace the content of the main content div, not the whole list item
+			const mainDiv = listItem.querySelector('.subtask-main');
+			mainDiv.innerHTML = `
+				<input type="checkbox">
+				<input type="text" class="edit-input" value="${currentText}">
+				<button class="btn-save" onclick="saveSubtaskEdit(this)">Save</button>
+				<button class="btn-cancel" onclick="cancelSubtaskEdit(this)">Cancel</button>
+			`;
+			mainDiv.querySelector('input[type="text"]').focus();
+		}
+
+		async function saveSubtaskEdit(saveButton) {
+			const listItem = saveButton.closest('.subtask-item'); // This correctly finds the <li>
+			const inputElement = listItem.querySelector('input[type="text"]');
+			// Now this will find the correct, non-undefined ID
+			const uniqueId = listItem.dataset.subtaskId; 
+
+			// Add this debugging
+			console.log('listItem:', listItem);
+			console.log('All datasets:', listItem.dataset);
+			console.log('subtaskId specifically:', uniqueId);
+			
+			if (!uniqueId) {
+				alert('Error: Subtask not fully loaded yet. Please wait a moment and try again.');
+				return;
+			}
+
+
+			const newText = inputElement.value.trim();
+
+			if (newText === '') {
+				alert('Sub-task cannot be empty.');
+				return;
+			}
+
+			// ... the rest of your function remains the same ...
+			const updateSubtaskUrl = 'https://primary-production-8133.up.railway.app/webhook/a1aac780-c679-4bd7-9945-945ede984592';
+			const formData = new FormData();
+			formData.append('uniqueId', uniqueId);
+			formData.append('newText', newText);
+
+			saveButton.textContent = 'Saving...';
+			saveButton.disabled = true;
+
+			try {
+				const response = await fetch(updateSubtaskUrl, { method: 'POST', body: formData });
+				if (response.ok) {
+					// Restore the original structure of the sub-task item
+					listItem.classList.remove('editing');
+					listItem.innerHTML = getSubtaskDisplayHTML(newText);
+				} else {
+					alert('Failed to save changes.');
+					saveButton.textContent = 'Save';
+					saveButton.disabled = false;
+				}
+			} catch (error) {
+				console.error('Error updating sub-task:', error);
+				alert('Error connecting to the server.');
+				saveButton.textContent = 'Save';
+				saveButton.disabled = false;
+			}
+		}
+
+		function cancelSubtaskEdit(cancelButton) {
+			const listItem = cancelButton.parentElement;
+			// Retrieve the original text we saved earlier
+			const originalText = listItem.dataset.originalText; 
+
+			// Revert the list item back to the display format with the original text
+			listItem.innerHTML = getSubtaskDisplayHTML(originalText);
+		}		
+
+		function getSubtaskDisplayHTML(text) {
+			return `
+				<div class="subtask-main">
+					<input type="checkbox">
+					<span class="subtask-item-text">${text}</span>
+					<span class="edit-icon" onclick="editSubtask(this)">✏️</span>
+					<span class="log-work-icon" onclick="showLogWorkForm(this)">⏱️</span>
+				</div>
+
+				<div class="log-work-form">
+					<div class="log-form-row">
+						<input type="datetime-local" class="edit-input subtask-start-time" title="Start Time">
+						<input type="datetime-local" class="edit-input subtask-end-time" title="End Time">
+						<span class="duration-display">-</span>
+					</div>
+					<div class="log-form-row">
+						<select class="edit-input" title="Activity">
+							<option value="">Select Activity</option>
+							<option>Break</option>
+							<option>Help</option>
+							<option>Lunch</option>
+							<option>Meeting</option>
+							<option>Study</option>
+							<option>Support</option>
+							<option>Work - Other</option>
+							<option>Work - RGM</option>
+							<option>Timepass</option>
+						</select>
+						<input type="text" class="edit-input" placeholder="Contact">
+					</div>
+					<input type="text" class="edit-input" placeholder="Notes..." style="margin-bottom: 5px;">
+					<button class="btn-save">Save Log</button>
+				</div>
+			`;
+		}
+
+		function showLogWorkForm(logIcon) {
+			const listItem = logIcon.closest('.subtask-item');
+			const logForm = listItem.querySelector('.log-work-form');
+
+			// Toggle the form's visibility
+			const isVisible = logForm.style.display === 'block';
+			logForm.style.display = isVisible ? 'none' : 'block';
+
+			// If we are showing the form, set up its logic
+			if (!isVisible) {
+				const startTimeInput = logForm.querySelector('.subtask-start-time');
+				const endTimeInput = logForm.querySelector('.subtask-end-time');
+				const durationDisplay = logForm.querySelector('.duration-display');
+				const saveLogBtn = logForm.querySelector('.btn-save');
+
+				// Auto-duration logic
+				function updateSubtaskDuration() {
+					const start = new Date(startTimeInput.value);
+					const end = new Date(endTimeInput.value);
+					if (startTimeInput.value && endTimeInput.value && end > start) {
+						const diffMs = end - start;
+						durationDisplay.textContent = formatDuration(diffMs);
+					} else {
+						durationDisplay.textContent = "-";
+					}
+				}
+				startTimeInput.addEventListener('change', updateSubtaskDuration);
+				endTimeInput.addEventListener('change', updateSubtaskDuration);
+
+				// Set up the save button's click event
+				saveLogBtn.onclick = function() {
+					saveSubtaskLog(this);
+				};
+			}
+		}	
+
+		async function saveSubtaskLog(saveButton) {
+			const logForm = saveButton.closest('.log-work-form');
+			const listItem = saveButton.closest('.subtask-item');
+			const modal = saveButton.closest('#task-details-modal');
+
+			// Get the IDs
+			const parentTodoId = modal.dataset.currentTaskId;
+			const parentUniqueId = listItem.dataset.subtaskId;
+			const parentSubtaskId = parentUniqueId ? parentUniqueId.split('-')[1] : null;
+
+			// Get values from the form
+			const startTime = logForm.querySelector('.subtask-start-time').value;
+			const endTime = logForm.querySelector('.subtask-end-time').value;
+			const duration = logForm.querySelector('.duration-display').textContent;
+			const activity = logForm.querySelector('select').value;
+			const contact = logForm.querySelector('input[placeholder="Contact"]').value;
+			const notes = logForm.querySelector('input[placeholder="Notes..."]').value;
+
+			// --- Send to n8n (replace with your actual URL) ---
+			const addEntryUrl = 'https://primary-production-8133.up.railway.app/webhook/1d08582a-ac04-4fbe-bac2-dd6a15f05c19';
+			const formData = new FormData();
+			formData.append('parentTodoId', parentTodoId);
+			formData.append('parentUniqueId', parentUniqueId);
+			formData.append('parentSubtaskId', parentSubtaskId);
+			formData.append('startTime', startTime);
+			formData.append('endTime', endTime);
+			formData.append('duration', duration);
+			formData.append('activity', activity);
+			formData.append('contact', contact);
+			formData.append('notes', notes);
+
+			saveButton.textContent = "Saving...";
+			saveButton.disabled = true;
+
+			try {
+				const response = await fetch(addEntryUrl, { method: 'POST', body: formData });
+				if (response.ok) {
+					alert('Log saved!');
+					logForm.style.display = 'none'; // Hide form on success
+				} else {
+					alert('Failed to save log.');
+				}
+			} catch (error) {
+				console.error('Error saving log:', error);
+				alert('Error connecting to server.');
+			} finally {
+				saveButton.textContent = "Save Log";
+				saveButton.disabled = false;
+			}
+		}		
+
+		async function loadSubtasks(taskId) {
+			const subtaskList = document.getElementById('subtask-list');
+			const loadSubtasksUrl = 'https://primary-production-8133.up.railway.app/webhook/2635b84c-530f-4df1-ac60-9ee085f031ed';
+			
+			// Clear existing subtasks
+			subtaskList.innerHTML = '';
+
+			try {
+				const response = await fetch(`${loadSubtasksUrl}?taskId=${taskId}`);
+				if (response.ok) {
+					// const subtasks = await response.json();
+					const responseText = await response.text();
+					const subtasks = responseText ? JSON.parse(responseText) : [];
+									
+					// Add each subtask to the list
+					if (subtasks && subtasks.length > 0) {
+						subtasks.forEach(subtask => {
+							const listItem = document.createElement('li');
+							listItem.className = 'subtask-item';
+							listItem.dataset.position = subtask.SubtaskId;
+							listItem.dataset.subtaskId = subtask.UniqueId;
+							
+							listItem.innerHTML = getSubtaskDisplayHTML(subtask.SubtaskText);
+							subtaskList.appendChild(listItem);
+						});
+					}
+				}
+			} catch (error) {
+				console.error('Error loading subtasks:', error);
+			}
+		}		
+
+		document.getElementById('save-details-btn').addEventListener('click', async function() {
+			const taskId = this.dataset.taskId;
+			const detailsText = document.getElementById('task-details-textarea').value;
+			
+			// IMPORTANT: Replace with the URL for your "Update Details" workflow
+			const updateDetailsUrl = 'https://primary-production-8133.up.railway.app/webhook/6ee00a69-ecfc-45a8-bcae-386b6b715fe1';
+		
+			this.textContent = "Saving...";
+			this.disabled = true;
+		
+			try {
+				const formData = new FormData();
+				formData.append('taskId', taskId);
+				formData.append('details', detailsText); // Sends the text to n8n
+		
+				const response = await fetch(updateDetailsUrl, {
+					method: 'POST',
+					body: formData
+				});
+		
+				if (response.ok) {
+					alert('Details saved successfully!');
+					closeTaskDetails(); // Closes the pop-up on success
+				} else {
+					alert('Failed to save details.');
+				}
+			} catch (error) {
+				console.error("Error saving details:", error);
+				alert('Error: Could not connect to the server.');
+			} finally {
+				this.textContent = "Save";
+				this.disabled = false;
+			}
+		});
+		
+		// Single, combined listener to run when the page loads
+		document.addEventListener('DOMContentLoaded', function() {
+			loadTodos();
+			loadWorkLogs();
+			initHydrationTracker();
+		});
+
+		
+    </script>
+
+
+
+</body>
+</html>
